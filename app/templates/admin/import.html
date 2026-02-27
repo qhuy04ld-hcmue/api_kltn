@@ -1,0 +1,29 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4>Import ZIP</h4>
+
+<div class="card p-3 shadow-sm">
+  <input type="file" id="file" class="form-control mb-2">
+  <button class="btn btn-success w-100"
+          onclick="importZip()">Import</button>
+</div>
+
+<script>
+async function importZip(){
+  const file=document.getElementById("file").files[0];
+
+  const form=new FormData();
+  form.append("file",file);
+
+  const res=await fetch("/api/import/",{
+    method:"POST",
+    body:form
+  });
+
+  const data=await res.json();
+  alert(JSON.stringify(data));
+}
+</script>
+
+{% endblock %}

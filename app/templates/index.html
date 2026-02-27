@@ -1,0 +1,173 @@
+{% extends "base_public.html" %}
+{% block content %}
+
+<div class="container mt-5">
+
+  <h3 class="mb-4 text-center">Lesson Search & Filter</h3>
+
+  <!-- SEARCH -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+      <div class="row">
+        <div class="col-md-10">
+          <input id="searchInput"
+                 class="form-control"
+                 placeholder="Enter keyword...">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100"
+                  onclick="doSearch()">
+            Search
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+
+      <div class="row">
+        <div class="col-md-3">
+          <input id="f_class" class="form-control" placeholder="Class">
+        </div>
+        <div class="col-md-3">
+          <input id="f_subject" class="form-control" placeholder="Subject">
+        </div>
+        <div class="col-md-3">
+          <input id="f_topic" class="form-control" placeholder="Topic">
+        </div>
+        <div class="col-md-3">
+          <input id="f_lesson" class="form-control" placeholder="Lesson">
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-md-4">
+          <input type="date" id="f_start" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <input type="date" id="f_end" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-success w-100"
+                  onclick="doFilter()">
+            Apply Filter
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultArea" class="row"></div>
+
+</div>
+
+<script>
+
+  function renderResults(lessons){
+  
+    const resultArea = document.getElementById("resultArea");
+  
+    if(!lessons || lessons.length === 0){
+      resultArea.innerHTML =
+        "<div class='alert alert-warning'>No results found</div>";
+      return;
+    }
+  
+    let html = "";
+  
+    lessons.forEach(lesson => {
+  
+      let fileButtons = "";
+  
+      if(Array.isArray(lesson.files)){
+  
+        lesson.files.forEach(file => {
+  
+          if(!file.file_url || !file.bucket) return;
+  
+          const url = new URL(file.file_url);
+          const path = url.pathname.replace(`/${file.bucket}/`, "");
+  
+          fileButtons += `
+            <button class="btn btn-sm btn-outline-primary me-2 mb-2"
+              onclick="window.open('/api/file/view/${file.bucket}/${path}','_blank')">
+              ${file.file_name}
+            </button>
+          `;
+        });
+      }
+  
+      html += `
+        <div class="col-md-6">
+          <div class="card shadow-sm mb-4">
+            <div class="card-body">
+  
+              <h5 class="text-primary">${lesson.lesson_name || ""}</h5>
+  
+              <div class="text-muted small mb-2">
+                ${lesson.class_id || ""} |
+                ${lesson.subject_id || ""} |
+                ${lesson.topic_id || ""}
+              </div>
+  
+              <div>
+                ${fileButtons || "<span class='text-muted'>No files</span>"}
+              </div>
+  
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  
+    resultArea.innerHTML = html;
+  }
+  
+  
+  async function doSearch(){
+  
+    const keyword = document.getElementById("searchInput").value.trim();
+  
+    if(!keyword) return;
+  
+    const res = await fetch(
+      `/api/search/keyword?q=${encodeURIComponent(keyword)}&limit=20&offset=0`
+    );
+  
+    const json = await res.json();
+  
+    renderResults(json.data || []);
+  }
+  
+  
+  async function doFilter(){
+  
+    const params = new URLSearchParams({
+      class_id: document.getElementById("f_class").value.trim(),
+      subject_id: document.getElementById("f_subject").value.trim(),
+      topic_id: document.getElementById("f_topic").value.trim(),
+      lesson_id: document.getElementById("f_lesson").value.trim(),
+      start_date: document.getElementById("f_start").value,
+      end_date: document.getElementById("f_end").value
+    });
+  
+    const res = await fetch(
+      `/api/filter/?${params.toString()}`
+    );
+  
+    const json = await res.json();
+  
+    renderResults(json.data || []);
+  }
+  
+  </script>
+  
+
+{% endblock %}

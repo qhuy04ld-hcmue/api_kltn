@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body onload="checkAdmin()">
+
+<div class="d-flex">
+
+<!-- SIDEBAR -->
+<div class="bg-dark text-white p-3" style="width:250px; min-height:100vh;">
+<h4>Admin Panel</h4>
+<hr>
+
+<a href="/upload.html" class="btn btn-light w-100 mb-2">Upload</a>
+<a href="/import.html" class="btn btn-light w-100 mb-2">Import ZIP</a>
+<a href="/crud.html" class="btn btn-light w-100 mb-2">CRUD</a>
+<a href="/" class="btn btn-info w-100 mb-2">User Page</a>
+
+<button onclick="logout()" class="btn btn-danger w-100">Logout</button>
+</div>
+
+<!-- CONTENT -->
+<div class="container-fluid p-4">
+
+<h3>Admin Search & Filter</h3>
+
+<!-- SEARCH -->
+<div class="row mb-3">
+<div class="col-md-9">
+<input type="text" id="admin_keyword" class="form-control" placeholder="Search keyword...">
+</div>
+<div class="col-md-3">
+<button onclick="adminSearch()" class="btn btn-primary w-100">Search</button>
+</div>
+</div>
+
+<!-- FILTER -->
+<div class="row mb-3">
+<div class="col-md-3">
+<input id="admin_class_id" class="form-control" placeholder="C10">
+</div>
+<div class="col-md-3">
+<input id="admin_subject_id" class="form-control" placeholder="C10-TIN">
+</div>
+<div class="col-md-3">
+<input id="admin_topic_id" class="form-control" placeholder="C10-TIN-T01">
+</div>
+<div class="col-md-3">
+<button onclick="adminFilter()" class="btn btn-success w-100">Filter</button>
+</div>
+</div>
+
+<table class="table table-bordered shadow">
+<thead class="table-dark">
+<tr>
+<th>Lesson ID</th>
+<th>Name</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody id="admin_result"></tbody>
+</table>
+
+</div>
+</div>
+
+ 
+<div class="modal fade" id="fileModal">
+<div class="modal-dialog modal-xl">
+<div class="modal-content">
+<div class="modal-body" id="fileViewer"></div>
+</div>
+</div>
+</div>
+
+  
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/admin.js"></script>
+
+</body>
+</html>

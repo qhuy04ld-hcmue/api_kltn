@@ -1,0 +1,88 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4 class="mb-4">MinIO Storage</h4>
+
+<div class="row">
+  <div class="col-3">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white">Buckets</div>
+      <ul id="bucketList" class="list-group list-group-flush"></ul>
+    </div>
+  </div>
+
+  <div class="col-9">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white">Files</div>
+      <div class="card-body">
+        <div id="fileTree"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadBuckets(){
+  const res = await fetch("/api/file/buckets");
+  const buckets = await res.json();
+
+  let html="";
+  buckets.forEach(b=>{
+    html+=`
+      <li class="list-group-item list-group-item-action"
+          onclick="loadBucket('${b}')">
+        ${b}
+      </li>
+    `;
+  });
+
+  bucketList.innerHTML=html;
+}
+
+async function loadBucket(bucket){
+  const res = await fetch(`/api/file/bucket/${bucket}`);
+  const files = await res.json();
+
+  let html="";
+  files.forEach(f=>{
+    html+=`
+  <div class="d-flex justify-content-between border-bottom py-2">
+    <span>${f.name}</span>
+    <div>
+      <button class="btn btn-sm btn-outline-primary"
+        onclick="window.open('/api/file/view/${bucket}/${f.name}','_blank')">
+        View
+      </button>
+
+      <button class="btn btn-sm btn-outline-danger"
+        onclick="deleteFile('${bucket}','${f.name}')">
+        Delete
+      </button>
+    </div>
+  </div>
+`;
+
+  });
+
+  fileTree.innerHTML=html;
+}
+async function deleteFile(bucket,file){
+
+if(!confirm("Delete this file?")) return;
+
+const res = await fetch(`/api/file/bucket/${bucket}/${file}`,{
+  method:"DELETE"
+});
+
+if(res.ok){
+  showToast("File deleted");
+  loadBucket(bucket);
+}else{
+  showToast("Delete failed","error");
+}
+}
+
+loadBuckets();
+</script>
+
+{% endblock %}

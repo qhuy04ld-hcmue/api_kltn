@@ -1,0 +1,263 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4 class="mb-4">Lesson Management</h4>
+
+<!-- ================= INSERT ================= -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-success text-white">
+    Insert / Upsert Lesson
+  </div>
+
+  <div class="card-body">
+
+    <div class="row">
+      <div class="col-md-6">
+
+        <label class="form-label">Class *</label>
+        <input id="i_class" class="form-control mb-3" placeholder="10">
+
+        <label class="form-label">Subject *</label>
+        <input id="i_subject" class="form-control mb-3" placeholder="TIN">
+
+        <label class="form-label">Topic Order *</label>
+        <input id="i_topic" class="form-control mb-3" placeholder="1">
+
+      </div>
+
+      <div class="col-md-6">
+
+        <label class="form-label">Lesson Order *</label>
+        <input id="i_lesson" class="form-control mb-3" placeholder="1">
+
+        <label class="form-label">Lesson Name *</label>
+        <input id="i_name" class="form-control mb-3" placeholder="Bài 1">
+
+        <label class="form-label">Description</label>
+        <textarea id="i_desc" class="form-control mb-3"></textarea>
+
+      </div>
+    </div>
+
+    <label class="form-label">File (Optional)</label>
+    <input type="file" id="i_file" class="form-control mb-3">
+
+    <button id="insertBtn"
+            class="btn btn-success w-100"
+            onclick="insertLesson()">
+      Insert / Update
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ================= UPDATE / DELETE ================= -->
+<div class="card shadow-sm">
+  <div class="card-header bg-warning">
+    Update / Delete Lesson
+  </div>
+
+  <div class="card-body">
+
+    <label class="form-label">Lesson ID *</label>
+    <input id="u_id" class="form-control mb-3" placeholder="C10-TIN-T01-L01">
+
+    <div class="row">
+      <div class="col-md-6">
+
+        <label class="form-label">New Lesson Name</label>
+        <input id="u_name" class="form-control mb-3">
+
+        <label class="form-label">New Description</label>
+        <textarea id="u_desc" class="form-control mb-3"></textarea>
+
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Replace / Add File</label>
+        <input type="file" id="u_file" class="form-control mb-3">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <button id="updateBtn"
+                class="btn btn-warning w-100"
+                onclick="updateLesson()">
+          Update
+        </button>
+      </div>
+
+      <div class="col-md-6">
+        <button id="deleteBtn"
+                class="btn btn-danger w-100"
+                onclick="deleteLesson()">
+          Soft Delete
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= TOAST ================= -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+  <div id="toast" class="toast align-items-center text-bg-success border-0">
+    <div class="d-flex">
+      <div class="toast-body" id="toastBody"></div>
+      <button type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast">
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+// ================= TOAST =================
+function showToast(message, type="success"){
+  const toast = document.getElementById("toast");
+  const body = document.getElementById("toastBody");
+
+  toast.className =
+    "toast align-items-center text-bg-"+
+    (type==="error"?"danger":"success")+
+    " border-0";
+
+  body.innerText = message;
+  new bootstrap.Toast(toast).show();
+}
+
+// ================= AUTO FORMAT =================
+i_subject.addEventListener("input", ()=>{
+  i_subject.value = i_subject.value.toUpperCase();
+});
+
+// ================= INSERT =================
+async function insertLesson(){
+
+  if(!i_class.value || !i_subject.value ||
+     !i_topic.value || !i_lesson.value ||
+     !i_name.value){
+
+    showToast("Please fill all required fields","error");
+    return;
+  }
+
+  insertBtn.disabled = true;
+  insertBtn.innerText = "Processing...";
+
+  const form = new FormData();
+  form.append("class_number", i_class.value);
+  form.append("subject_code", i_subject.value);
+  form.append("topic_order", i_topic.value);
+  form.append("lesson_order", i_lesson.value);
+  form.append("lesson_name", i_name.value);
+  form.append("description", i_desc.value);
+
+  if(i_file.files[0]){
+    form.append("file", i_file.files[0]);
+  }
+
+  const res = await fetch("/api/crud/insert",{
+    method:"POST",
+    body:form
+  });
+
+  const data = await res.json();
+
+  if(res.ok){
+    showToast(
+      `${data.action === "created" ? "Created" : "Updated"}: ${data.lesson_id}`
+    );
+
+    document.querySelectorAll(
+      "#i_class,#i_subject,#i_topic,#i_lesson,#i_name,#i_desc"
+    ).forEach(e=>e.value="");
+
+    i_file.value="";
+  }
+  else{
+    showToast(data.detail || "Insert failed","error");
+  }
+
+  insertBtn.disabled = false;
+  insertBtn.innerText = "Insert / Update";
+}
+
+
+// ================= UPDATE =================
+async function updateLesson(){
+
+  if(!u_id.value){
+    showToast("Enter lesson_id","error");
+    return;
+  }
+
+  updateBtn.disabled = true;
+  updateBtn.innerText = "Updating...";
+
+  const form = new FormData();
+
+  if(u_name.value) form.append("lesson_name", u_name.value);
+  if(u_desc.value) form.append("description", u_desc.value);
+  if(u_file.files[0]) form.append("file", u_file.files[0]);
+
+  const res = await fetch(`/api/crud/update/${u_id.value}`,{
+    method:"PUT",
+    body:form
+  });
+
+  const data = await res.json();
+
+  if(res.ok){
+    showToast("Updated successfully");
+    u_file.value="";
+  }
+  else{
+    showToast(data.detail || "Update failed","error");
+  }
+
+  updateBtn.disabled = false;
+  updateBtn.innerText = "Update";
+}
+
+
+// ================= DELETE =================
+async function deleteLesson(){
+
+  if(!u_id.value){
+    showToast("Enter lesson_id","error");
+    return;
+  }
+
+  if(!confirm("Are you sure you want to soft delete this lesson?"))
+    return;
+
+  deleteBtn.disabled = true;
+  deleteBtn.innerText = "Deleting...";
+
+  const res = await fetch(`/api/crud/soft-delete/${u_id.value}`,{
+    method:"DELETE"
+  });
+
+  const data = await res.json();
+
+  if(res.ok){
+    showToast("Soft deleted successfully");
+  }
+  else{
+    showToast(data.detail || "Delete failed","error");
+  }
+
+  deleteBtn.disabled = false;
+  deleteBtn.innerText = "Soft Delete";
+}
+
+</script>
+
+{% endblock %}

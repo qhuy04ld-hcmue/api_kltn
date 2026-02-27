@@ -1,0 +1,46 @@
+{% extends "base_admin.html" %}
+{% block content %}
+<!--
+<h4 class="mb-3">Search Lessons</h4>
+
+<div class="card p-3 mb-3">
+  <input id="searchInput" class="form-control mb-2" placeholder="Keyword">
+  <button class="btn btn-primary w-100"
+          onclick="doSearch()">Search</button>
+</div>
+
+<h4 class="mt-4">Filter Lessons</h4>
+
+<div class="card p-3 mb-3">
+  <input id="classId" class="form-control mb-2" placeholder="Class ID">
+  <input id="subjectId" class="form-control mb-2" placeholder="Subject ID">
+  <button class="btn btn-success w-100"
+          onclick="doFilter()">Apply Filter</button>
+</div>
+
+<div id="resultArea" class="card p-3"></div>
+
+<script>
+async function doSearch(){
+  const q=document.getElementById("searchInput").value;
+
+  const res=await fetch(`/api/search/keyword?q=${q}`);
+  const data=await res.json();
+
+  document.getElementById("resultArea").innerHTML=
+    "<pre>"+JSON.stringify(data,null,2)+"</pre>";
+}
+
+async function doFilter(){
+  const c=document.getElementById("classId").value;
+  const s=document.getElementById("subjectId").value;
+
+  const res=await fetch(`/api/filter/?class_id=${c}&subject_id=${s}`);
+  const data=await res.json();
+
+  document.getElementById("resultArea").innerHTML=
+    "<pre>"+JSON.stringify(data,null,2)+"</pre>";
+}
+</script>
+-->
+{% endblock %}

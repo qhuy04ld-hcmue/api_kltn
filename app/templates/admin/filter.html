@@ -1,0 +1,119 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4 class="mb-4">Filter Lessons</h4>
+
+<div class="card shadow-sm p-3 mb-4">
+  <div class="row g-2">
+
+    <div class="col-md-3">
+      <input id="class_id"
+             class="form-control"
+             placeholder="Class ID">
+    </div>
+
+    <div class="col-md-3">
+      <input id="subject_id"
+             class="form-control"
+             placeholder="Subject ID">
+    </div>
+
+    <div class="col-md-3">
+      <input id="topic_id"
+             class="form-control"
+             placeholder="Topic ID">
+    </div>
+
+    <div class="col-md-3">
+      <input id="lesson_id"
+             class="form-control"
+             placeholder="Lesson ID">
+    </div>
+
+    <div class="col-md-12 mt-2">
+      <button class="btn btn-success w-100"
+              onclick="filterLessons()">
+        Apply Filter
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div id="result" class="row"></div>
+
+<script>
+
+async function filterLessons(){
+
+  const c = class_id.value.trim();
+  const s = subject_id.value.trim();
+  const t = topic_id.value.trim();
+  const l = lesson_id.value.trim();
+
+  const res = await fetch(
+    `/api/filter/?class_id=${c}&subject_id=${s}&topic_id=${t}&lesson_id=${l}`
+  );
+
+  const json = await res.json();
+
+  renderLessons(json.data || []);
+}
+
+
+
+function renderLessons(lessons){
+
+  let html = "";
+
+  lessons.forEach(lesson => {
+
+    let fileButtons = "";
+
+    if(Array.isArray(lesson.files)){
+
+      lesson.files.forEach(file => {
+
+        if(!file.file_url || !file.bucket) return;
+
+        const url = new URL(file.file_url);
+        const path = url.pathname.replace(`/${file.bucket}/`, "");
+
+        fileButtons += `
+          <button class="btn btn-sm btn-outline-primary me-2 mb-2"
+            onclick="window.open('/api/file/view/${file.bucket}/${path}','_blank')">
+            ${file.file_name}
+          </button>
+        `;
+      });
+    }
+
+    html += `
+      <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+
+            <h5 class="text-primary">${lesson.lesson_name}</h5>
+
+            <div class="text-muted small mb-2">
+              ${lesson.class_id} |
+              ${lesson.subject_id} |
+              ${lesson.topic_id}
+            </div>
+
+            <div>
+              ${fileButtons || "<span class='text-muted'>No files</span>"}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("result").innerHTML = html;
+}
+
+</script>
+
+{% endblock %}

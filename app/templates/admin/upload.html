@@ -1,0 +1,54 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4 class="mb-4">Upload Lesson File</h4>
+
+<div class="card shadow-sm p-3">
+
+  <input type="file" id="file" class="form-control mb-2">
+
+  <input id="class_number" class="form-control mb-2" placeholder="Class (VD: 10)">
+  <input id="subject_code" class="form-control mb-2" placeholder="Subject (VD: TIN)">
+  <input id="topic_order" class="form-control mb-2" placeholder="Topic Order">
+  <input id="lesson_order" class="form-control mb-2" placeholder="Lesson Order">
+  <input id="lesson_name" class="form-control mb-2" placeholder="Lesson Name">
+  <textarea id="description" class="form-control mb-3" placeholder="Description"></textarea>
+
+  <button class="btn btn-primary w-100" onclick="uploadFile()">
+    Upload
+  </button>
+
+</div>
+
+<script>
+async function uploadFile(){
+
+  const file = document.getElementById("file").files[0];
+  if(!file){ showToast("Select file","error"); return; }
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("class_number", class_number.value);
+  form.append("subject_code", subject_code.value);
+  form.append("topic_order", topic_order.value);
+  form.append("lesson_order", lesson_order.value);
+  form.append("lesson_name", lesson_name.value);
+  form.append("description", description.value);
+
+  const res = await fetch("/api/upload/",{
+    method:"POST",
+    body:form
+  });
+
+  if(!res.ok){
+    showToast("Upload failed","error");
+    return;
+  }
+
+  const data = await res.json();
+
+  showToast("Uploaded to bucket: " + data.bucket);
+}
+</script>
+
+{% endblock %}

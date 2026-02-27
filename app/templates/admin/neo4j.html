@@ -1,0 +1,44 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h4 class="mb-4">Neo4j Graph Dashboard</h4>
+
+<div class="row">
+
+  <!-- GRAPH -->
+  <div class="col-md-8">
+      <div id="graph"
+           style="height:650px;background:white;border-radius:10px;">
+      </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="col-md-4">
+
+      <!-- RESULTS OVERVIEW -->
+      <div id="overview" class="card shadow-sm mb-3 p-3">
+          Loading...
+      </div>
+
+      <!-- NODE DETAIL -->
+      <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+              Node Detail
+          </div>
+          <div class="card-body">
+              <div id="nodeDetail">
+                  <small class="text-muted">
+                      Click a node to view details
+                  </small>
+              </div>
+          </div>
+      </div>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="/static/js/neo4j.js"></script>
+
+{% endblock %}

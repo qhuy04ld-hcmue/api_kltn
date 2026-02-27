@@ -1,0 +1,71 @@
+app/
+│
+├── main.py
+├── config.py
+├── requirements.txt
+│
+├── database/
+│   ├── postgres.py
+│   ├── mongo.py
+│   ├── neo4j.py
+│   ├── minio_client.py
+│
+├── services/
+│   ├── sync_service.py
+│   ├── search_service.py
+│   ├── filter_service.py
+│
+├── routers/
+│   ├── auth.py
+│   ├── postgres.py
+│   ├── mongo.py
+│   ├── neo4j.py
+│   ├── minio.py
+│   ├── search.py
+│   ├── filter.py
+│
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── login.html
+│   ├── dashboard.html
+│   ├── postgres.html
+│   ├── mongo.html
+│   ├── neo4j.html
+│   ├── minio.html
+│
+└── static/
+    └── js/
+        ├── neo4j.js
+        ├── postgres.js
+        ├── mongo.js
+        ├── minio.js
+        ├── search.js
+        ├── filter.js
+
+
+
+
+Bao gồm:
+
+✅ Login hệ thống
+
+✅ PostgreSQL CRUD (Insert + Update + Soft Delete)
+
+✅ Tự động sync Neo4j khi CRUD
+
+✅ Neo4j graph animation (physics + color theo label)
+
+✅ Mongo quản lý các collection ZIP Import
+
+✅ MinIO: quản lý các bucket: video/image/document và các folder/file của các bucket đó, quản lý Upload
+
+✅ Filter theo: lớp, môn, chủ đề, bài, thời gian
+
+✅ Search từ khóa
+
+✅ Bootstrap UI
+
+✅ Không lỗi static
+
+✅ Không lỗi router

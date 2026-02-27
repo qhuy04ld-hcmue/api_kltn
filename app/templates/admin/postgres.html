@@ -1,0 +1,240 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<div class="mb-3">
+  <h4 class="fw-bold">PostgreSQL Manager</h4>
+</div>
+
+<div class="row">
+
+    <div class="col-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                Tables
+            </div>
+            <ul id="tableList" class="list-group list-group-flush"></ul>
+        </div>
+    </div>
+
+    <div class="col-9">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <span id="currentTableName">Table Data</span>
+            </div>
+            <div class="card-body">
+                <div id="tableData"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">Edit Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm"></form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+let currentTable = "";
+let currentEditId = "";
+let primaryKeyName = "";
+
+/* Load table list */
+
+async function loadTables(){
+    const res = await fetch("/api/file/postgres");
+    const tables = await res.json();
+
+    tableList.innerHTML = "";
+
+    tables.forEach(t => {
+        tableList.innerHTML += `
+            <li class="list-group-item list-group-item-action"
+                onclick="loadData('${t}')">
+                ${t}
+            </li>`;
+    });
+}
+
+async function loadData(table){
+    currentTable = table;
+    currentTableName.innerText = table;
+
+    const res = await fetch(`/api/file/postgres/${table}`);
+    const data = await res.json();
+
+    if(data.length === 0){
+        tableData.innerHTML = "<p>No data</p>";
+        return;
+    }
+
+    primaryKeyName = Object.keys(data[0])[0];
+
+    renderTable(data);
+}
+
+function renderTable(data){
+
+    let html = `
+    <table class="table table-bordered table-hover table-sm">
+        <thead class="table-dark">
+            <tr>`;
+
+    Object.keys(data[0]).forEach(k=>{
+        html += `<th>${k}</th>`;
+    });
+
+    html += `<th width="120">Action</th></tr></thead><tbody>`;
+
+    data.forEach(row=>{
+        html += "<tr>";
+
+        Object.entries(row).forEach(([k,v])=>{
+            html += `<td>${v ?? ""}</td>`;
+        });
+
+        if(currentTable === "acc"){
+    html += `<td><span class="text-muted">Read only</span></td>`;
+}else{
+    html += `
+    <td>
+        <button class="btn btn-sm btn-warning"
+            onclick='openEditModal(${JSON.stringify(row)})'>
+            Edit
+        </button>
+        <button class="btn btn-sm btn-danger"
+            onclick="deleteRecord('${row[primaryKeyName]}')">
+            Delete
+        </button>
+    </td>`;
+}
+
+        html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+
+    tableData.innerHTML = html;
+}
+
+/* EDIT */
+
+function openEditModal(row){
+/*
+if(row.is_deleted === true){
+    alert("Cannot edit deleted record");
+    return;
+}
+*/
+currentEditId = row[primaryKeyName];
+editForm.innerHTML = "";
+
+Object.entries(row).forEach(([k,v])=>{
+
+    if(k === "created_at" || k === "updated_at") return;
+
+    let disabled = "";
+    if(k === primaryKeyName) disabled = "disabled";
+
+    /* ===== BOOLEAN FIELD ===== */
+    if(k === "is_deleted"){
+        editForm.innerHTML += `
+            <div class="mb-2">
+                <label class="form-label">${k}</label>
+                <select class="form-control" name="${k}" ${disabled}>
+                    <option value="false" ${v === false ? "selected" : ""}>False</option>
+                    <option value="true" ${v === true ? "selected" : ""}>True</option>
+                </select>
+            </div>`;
+        return;
+    }
+
+    /* ===== NUMBER FIELD ===== */
+    if(typeof v === "number"){
+        editForm.innerHTML += `
+            <div class="mb-2">
+                <label class="form-label">${k}</label>
+                <input type="number"
+                       class="form-control"
+                       name="${k}"
+                       value="${v ?? ""}"
+                       ${disabled}>
+            </div>`;
+        return;
+    }
+
+    /* ===== DEFAULT TEXT ===== */
+    editForm.innerHTML += `
+        <div class="mb-2">
+            <label class="form-label">${k}</label>
+            <input type="text"
+                   class="form-control"
+                   name="${k}"
+                   value="${v ?? ""}"
+                   ${disabled}>
+        </div>`;
+});
+
+new bootstrap.Modal(document.getElementById("editModal")).show();
+}
+
+async function saveEdit(){
+
+const formData = new FormData(editForm);
+let payload = {};
+
+formData.forEach((v,k)=>{
+
+    if(k === primaryKeyName) return;
+
+    /* BOOLEAN FIX */
+    if(k === "is_deleted"){
+        payload[k] = (v === "true");
+    }
+    else{
+        payload[k] = v;
+    }
+});
+
+await fetch(`/api/postgres/${currentTable}/${currentEditId}`,{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+});
+
+bootstrap.Modal.getInstance(editModal).hide();
+loadData(currentTable);
+}
+
+/* DELETE */
+
+async function deleteRecord(id){
+
+    if(!confirm("Soft delete record?")) return;
+
+    await fetch(`/api/postgres/${currentTable}/${id}`,{
+        method:"DELETE"
+    });
+
+    loadData(currentTable);
+}
+
+loadTables();
+
+</script>
+
+{% endblock %}
